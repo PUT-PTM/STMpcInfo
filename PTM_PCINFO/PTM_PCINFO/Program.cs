@@ -58,8 +58,6 @@ namespace PTM_PCINFO
             };
             computer.Open();
             //int k = 0;
-            //while (_continue)
-            //{
             foreach (var hardware in computer.Hardware)
             {
                 if (hardware.HardwareType == HardwareType.CPU)
@@ -160,10 +158,8 @@ namespace PTM_PCINFO
                 }
 
             }
-            //readThread.Join();
-            //Console.ReadKey();
         }
-        //}
+
         public static void Read()
         {
             while (_continue)
