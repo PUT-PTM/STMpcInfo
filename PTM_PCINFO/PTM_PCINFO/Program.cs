@@ -38,7 +38,7 @@ namespace PTM_PCINFO
             }
             Thread readThread = new Thread(Read);
             _serialPort.ReadTimeout = 500;
-            _serialPort.WriteTimeout = 500;           
+            _serialPort.WriteTimeout = 500;
             _continue = true;
             _serialPort.Open();
             readThread.Start();
@@ -68,15 +68,15 @@ namespace PTM_PCINFO
                     {
                         if (sensor.SensorType == SensorType.Temperature)
                         {
-                            _serialPort.WriteLine(sensor.Name + ": " + sensor.Value.GetValueOrDefault() + "°C");
+                            _serialPort.WriteLine(sensor.Name + ": " + Convert.ToString((int)(float)sensor.Value.GetValueOrDefault()) + "C");
                         }
                         if (sensor.SensorType == SensorType.Load)
                         {
-                            _serialPort.WriteLine(sensor.Name + ": " + sensor.Value.GetValueOrDefault() + "°%");
+                            _serialPort.WriteLine(sensor.Name + ": " + Convert.ToString((int)(float)sensor.Value.GetValueOrDefault()) + "%");
                         }
                         if (sensor.SensorType == SensorType.Clock)
                         {
-                            _serialPort.WriteLine(sensor.Name + ": " + sensor.Value.GetValueOrDefault() + "Mhz");
+                            _serialPort.WriteLine(sensor.Name + ": " + Convert.ToString((int)(float)sensor.Value.GetValueOrDefault()) + "Mhz");
                         }
                     }
                 }
@@ -90,7 +90,7 @@ namespace PTM_PCINFO
                         {
                             if (sensor.SensorType == SensorType.Fan && sensor.Name.Equals("Fan #1", StringComparison.OrdinalIgnoreCase))
                             {
-                                _serialPort.WriteLine("Prędkość coolera: " + Convert.ToString((int)(float)sensor.Value) + "RPM\n");
+                                _serialPort.WriteLine("Predkosc coolera: " + Convert.ToString((int)(float)sensor.Value) + "RPM");
                             }
                         }
                     }
@@ -104,19 +104,19 @@ namespace PTM_PCINFO
                     {
                         if (sensor.SensorType == SensorType.Fan)
                         {
-                            _serialPort.WriteLine(sensor.Name + ": " + Convert.ToString(sensor.Value) + "RPM");
+                            _serialPort.WriteLine(sensor.Name + ": " + Convert.ToString((int)(float)sensor.Value) + "RPM");
                         }
                         if (sensor.SensorType == SensorType.Clock)
                         {
-                            _serialPort.WriteLine(sensor.Name + ": " + Convert.ToString(sensor.Value) + "MHz");
+                            _serialPort.WriteLine(sensor.Name + ": " + Convert.ToString((int)(float)sensor.Value) + "MHz");
                         }
                         if (sensor.SensorType == SensorType.Temperature)
                         {
-                            _serialPort.WriteLine(sensor.Name + ": " + Convert.ToString(sensor.Value) + "°C");
+                            _serialPort.WriteLine(sensor.Name + ": " + Convert.ToString((int)(float)sensor.Value) + "C");
                         }
                         if (sensor.SensorType == SensorType.Load)
                         {
-                            _serialPort.WriteLine(sensor.Name + ": " + Convert.ToString(sensor.Value) + "%");
+                            _serialPort.WriteLine(sensor.Name + ": " + Convert.ToString((int)(float)sensor.Value) + "%");
                         }
 
                     }
@@ -130,11 +130,11 @@ namespace PTM_PCINFO
                     {
                         if (sensor.SensorType == SensorType.Load)
                         {
-                            _serialPort.WriteLine(sensor.Name + ": " + Convert.ToString(sensor.Value) + "%");
+                            _serialPort.WriteLine(sensor.Name + ": " + Convert.ToString((int)(float)sensor.Value) + "%");
                         }
                         if (sensor.SensorType == SensorType.Data)
                         {
-                            _serialPort.WriteLine(sensor.Name + ": " + Convert.ToString(sensor.Value) + "GB");
+                            _serialPort.WriteLine(sensor.Name + ": " + Convert.ToString((int)(float)sensor.Value) + "GB");
                         }
                     }
                 }
@@ -148,11 +148,11 @@ namespace PTM_PCINFO
                     {
                         if (sensor.SensorType == SensorType.Load)
                         {
-                            _serialPort.WriteLine(sensor.Name + ": " + Convert.ToString(sensor.Value) + "%");
+                            _serialPort.WriteLine(sensor.Name + ": " + Convert.ToString((int)(float)sensor.Value) + "%");
                         }
                         if (sensor.SensorType == SensorType.Temperature)
                         {
-                            _serialPort.WriteLine(sensor.Name + ": " + Convert.ToString(sensor.Value) + "°C");
+                            _serialPort.WriteLine(sensor.Name + ": " + Convert.ToString((int)(float)sensor.Value) + "C");
                         }
                     }
                 }
@@ -166,14 +166,15 @@ namespace PTM_PCINFO
             {
                 try
                 {
-                    if(_serialPort.IsOpen==false)
+                    if (_serialPort.IsOpen == false)
                     {
                         _serialPort.Open();
                     }
-                    string message = _serialPort.ReadLine();
-                    Console.WriteLine(message);
+                    //string message = _serialPort.ReadLine();
+                    //Console.WriteLine(message);
                 }
-                catch (TimeoutException) {
+                catch (TimeoutException)
+                {
                     _serialPort.Close();
                 }
             }
