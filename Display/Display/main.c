@@ -51,44 +51,7 @@ void OTG_FS_WKUP_IRQHandler(void);
 }
 #endif
 
-int lolo = 0;
-char tab[29][50] = { '\0' };
-char x[32] = { '\0' };
-char l[32] = { '\0' };
-int s = 0;
-char o[17] = { ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
-		' ', ' ', ' ', '\0' };
 
-void EXTI0_IRQHandler(void) {
-	if (EXTI_GetITStatus(EXTI_Line0) != RESET) {
-
-		for (int zeze = 0; zeze < 16; zeze++) {
-			if (zeze == 15) {
-				x[zeze] = '\0';
-			}
-
-			x[zeze] = tab[lolo][zeze];
-		}
-		for (int zeze = 16; zeze < 32; zeze++) {
-			l[s] = tab[lolo][zeze];
-			s++;
-		}
-		s = 0;
-		LCD_MoveToPosition(0x00);
-		LCD_Print(o);
-		LCD_MoveToPosition(0x40);
-		LCD_Print(o);
-		LCD_MoveToPosition(0x00);
-		LCD_Print(x);
-		LCD_MoveToPosition(0x40);
-		LCD_Print(l);
-		lolo++;
-		if (lolo == 29) {
-			lolo = 0;
-		}
-		EXTI_ClearITPendingBit(EXTI_Line0);
-	}
-}
 void TimerInit() {
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
@@ -97,7 +60,6 @@ void TimerInit() {
 	TIM_TimeBaseStructure.TIM_ClockDivision = 1;
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
 	TIM_TimeBaseInit(TIM4, &TIM_TimeBaseStructure);
-
 }
 void PrzerwanieInit() {
 	SYSCFG_EXTILineConfig(GPIOA, EXTI_PinSource0);
@@ -117,13 +79,20 @@ void PrzerwanieInit() {
 int main(void) {
 	SystemInit();
 	uint8_t theByte = 0;
-	int y = 0;
+	int i = 0;
 	int j = 0;
-
+	int y = 0;
+	int z = 0;
+	char tab[29][26] = { '\0' };
+	char top[16] = { '\0' };
+	char bottom[16] = { '\0' };
+	int count = 0;
+	char clear[17] = { ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+			' ', ' ', ' ', ' ', ' ', '\0' };
 	PrzerwanieInit();
 	TimerInit();
-	int counter = TIM4->CNT;
-
+	TIM_Cmd(TIM4, ENABLE);
+	TIM_Cmd(TIM2, ENABLE);
 	/* Initialize USB, IO, SysTick, and all those other things you do in the morning */
 	init();
 	// Custom character definitions
@@ -139,20 +108,49 @@ int main(void) {
 	LCD_Initalize(BUS_WIDTH_4, DISPLAY_LINES_2, FONT_5x10);
 	LCD_Home();
 	while (1) {
-		if (VCP_get_char(&theByte)) {
+		int counter = TIM4->CNT;
+		if (counter == 0 && y == 29) {
+
+			y = 0;
+			LCD_MoveToPosition(0x00);
+			LCD_Print(clear);
+			LCD_MoveToPosition(0x40);
+			LCD_Print(clear);
+			for (i = 0; i < 16; i++) {
+				top[i] = '\0';
+				bottom[i] = '\0';
+			}
+			for (i = 0; i < 16; i++) {
+				if (i == 15) {
+					top[i] = '\0';
+				}
+
+				top[i] = tab[z][i];
+			}
+			for (i = 16; i < 26; i++) {
+				bottom[count] = tab[z][i];
+				count++;
+			}
+			count = 0;
+			LCD_MoveToPosition(0x00);
+			LCD_Print(top);
+			LCD_MoveToPosition(0x40);
+			LCD_Print(bottom);
+			z++;
+			if (z == 29) {
+				z = 0;
+			}
+
+		} else if (VCP_get_char(&theByte) && y != 29) {
 			if (theByte != '\n') {
 				tab[y][j] = theByte;
 				j++;
 			} else {
+				for (i = j; i < 26; i++) {
+					tab[y][i] = '\0';
+				}
 				y++;
 				j = 0;
-				if (y == 29) {
-					y = 0;
-				}
-				if (j == 50) {
-					j = 0;
-
-				}
 			}
 		}
 	}
