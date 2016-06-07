@@ -225,7 +225,6 @@ namespace PTM_PCINFO
 
             };
             computer.Open();
-            Stack<string> stack = new Stack<string>();
 
             foreach (var hardware in computer.Hardware)
             {
