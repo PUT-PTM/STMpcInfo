@@ -15,22 +15,15 @@
 #include "hd44780.h"
 #include "misc.h"
 #include "stm32f4xx_tim.h"
+#include "string.h"
 
 volatile uint32_t ticker, downTicker;
 
-/*
- * The USB data must be 4 byte aligned if DMA is enabled. This macro handles
- * the alignment, if necessary (it's actually magic, but don't tell anyone).
- */
 __ALIGN_BEGIN USB_OTG_CORE_HANDLE USB_OTG_dev __ALIGN_END;
 
 void init();
 void ColorfulRingOfDeath(void);
 
-/*
- * Define prototypes for interrupt handlers here. The conditional "extern"
- * ensures the weak declarations from startup_stm32f4xx.c are overridden.
- */
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -51,106 +44,132 @@ void OTG_FS_WKUP_IRQHandler(void);
 }
 #endif
 
-
-void TimerInit() {
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
-	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
-	TIM_TimeBaseStructure.TIM_Period = 9999;
-	TIM_TimeBaseStructure.TIM_Prescaler = 41999;
-	TIM_TimeBaseStructure.TIM_ClockDivision = 1;
-	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-	TIM_TimeBaseInit(TIM4, &TIM_TimeBaseStructure);
-}
-void PrzerwanieInit() {
-	SYSCFG_EXTILineConfig(GPIOA, EXTI_PinSource0);
-	NVIC_InitTypeDef NVIC_InitStructure;
-	NVIC_InitStructure.NVIC_IRQChannel = EXTI0_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x00;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x01;
-	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&NVIC_InitStructure);
-	EXTI_InitTypeDef EXTI_InitStructure;
-	EXTI_InitStructure.EXTI_Line = EXTI_Line0;
-	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
-	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-	EXTI_Init(&EXTI_InitStructure);
-}
 int main(void) {
 	SystemInit();
 	uint8_t theByte = 0;
 	int i = 0;
 	int j = 0;
-	int y = 0;
-	int z = 0;
-	char tab[29][26] = { '\0' };
-	char top[16] = { '\0' };
-	char bottom[16] = { '\0' };
-	int count = 0;
+	int x = 0;
+	int count = 16;
+	char values[10] = { '\0' };
+	char name[3] = { '\0' };
+	char letter[2] = { '\0' };
 	char clear[17] = { ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
 			' ', ' ', ' ', ' ', ' ', '\0' };
-	PrzerwanieInit();
-	TimerInit();
-	TIM_Cmd(TIM4, ENABLE);
-	TIM_Cmd(TIM2, ENABLE);
-	/* Initialize USB, IO, SysTick, and all those other things you do in the morning */
 	init();
-	// Custom character definitions
-	uint8_t CustChar1[8] = { b00011, b00100, b01010, b10000, b10100, b01011,
-			b00100, b00011 };
-
-	uint8_t CustChar2[8] = { b11000, b00100, b01010, b00001, b00101, b11010,
-			b00100, b11000 };
-
-	// Initialize the LCD
 	LCD_ConfigurePort(GPIOE, GPIO_Pin_5, GPIO_Pin_12, GPIO_Pin_6, NULL, NULL,
 			NULL, NULL, GPIO_Pin_7, GPIO_Pin_8, GPIO_Pin_9, GPIO_Pin_10);
 	LCD_Initalize(BUS_WIDTH_4, DISPLAY_LINES_2, FONT_5x10);
 	LCD_Home();
 	while (1) {
-		int counter = TIM4->CNT;
-		if (counter == 0 && y == 29) {
-
-			y = 0;
-			LCD_MoveToPosition(0x00);
-			LCD_Print(clear);
-			LCD_MoveToPosition(0x40);
-			LCD_Print(clear);
-			for (i = 0; i < 16; i++) {
-				top[i] = '\0';
-				bottom[i] = '\0';
-			}
-			for (i = 0; i < 16; i++) {
-				if (i == 15) {
-					top[i] = '\0';
-				}
-
-				top[i] = tab[z][i];
-			}
-			for (i = 16; i < 26; i++) {
-				bottom[count] = tab[z][i];
-				count++;
-			}
-			count = 0;
-			LCD_MoveToPosition(0x00);
-			LCD_Print(top);
-			LCD_MoveToPosition(0x40);
-			LCD_Print(bottom);
-			z++;
-			if (z == 29) {
-				z = 0;
-			}
-
-		} else if (VCP_get_char(&theByte) && y != 29) {
+		if (VCP_get_char(&theByte)) {
 			if (theByte != '\n') {
-				tab[y][j] = theByte;
-				j++;
-			} else {
-				for (i = j; i < 26; i++) {
-					tab[y][i] = '\0';
+				if (j < 2) {
+					name[j] = theByte;
+					j++;
+				} else if (j == 2) {
+					letter[0] = theByte;
+					j++;
+				} else {
+					values[x] = theByte;
+					x++;
 				}
-				y++;
+			} else if (theByte == '\n') {
+				LCD_MoveToPosition(0x00);
+				LCD_Print(clear);
+				LCD_MoveToPosition(0x40);
+				LCD_Print(clear);
+				char string[26] = { '\0' };
+				char unit[4] = { '\0' };
+				char top[16] = { '\0' };
+				char bottom[16] = { '\0' };
+
+				if (strcmp(letter, "G") == 0) {
+					sprintf(unit, "GB");
+				} else if (strcmp(letter, "%") == 0) {
+					sprintf(unit, "%c", 37);
+				} else if (strcmp(letter, "C") == 0) {
+					sprintf(unit, "C");
+				} else if (strcmp(letter, "R") == 0) {
+					sprintf(unit, "RPM");
+				} else if (strcmp(letter, "M") == 0) {
+					sprintf(unit, "MHz");
+				}
+
+				if (strcmp(name, "C1") == 0) {
+					sprintf(string, "CPU Core #1: %s%s", values, unit);
+				} else if (strcmp(name, "C2") == 0) {
+					sprintf(string, "CPU Core #2: %s%s", values, unit);
+				} else if (strcmp(name, "C3") == 0) {
+					sprintf(string, "CPU Core #3: %s%s", values, unit);
+				} else if (strcmp(name, "C4") == 0) {
+					sprintf(string, "CPU Core #4: %s%s", values, unit);
+				} else if (strcmp(name, "C5") == 0) {
+					sprintf(string, "CPU Core #5: %s%s", values, unit);
+				} else if (strcmp(name, "C6") == 0) {
+					sprintf(string, "CPU Core #6: %s%s", values, unit);
+				} else if (strcmp(name, "C7") == 0) {
+					sprintf(string, "CPU Core #7: %s%s", values, unit);
+				} else if (strcmp(name, "C8") == 0) {
+					sprintf(string, "CPU Core #8: %s%s", values, unit);
+				} else if (strcmp(name, "C9") == 0) {
+					sprintf(string, "CPU Core #9: %s%s", values, unit);
+				} else if (strcmp(name, "BS") == 0) {
+					sprintf(string, "Bus Speed: %s%s", values, unit);
+				} else if (strcmp(name, "CF") == 0) {
+					sprintf(string, "CPU Cooler Speed: %s%s", values, unit);
+				} else if (strcmp(name, "GF") == 0) {
+					sprintf(string, "GPU Fan: %s%s", values, unit);
+				} else if (strcmp(name, "GM") == 0) {
+					sprintf(string, "GPU Memory: %s%s", values, unit);
+				} else if (strcmp(name, "GS") == 0) {
+					sprintf(string, "GPU Shader: %s%s", values, unit);
+				} else if (strcmp(name, "GC") == 0) {
+					sprintf(string, "GPU Core: %s%s", values, unit);
+				} else if (strcmp(name, "GR") == 0) {
+					sprintf(string, "GPU Memory Controller: %s%s", values,
+							unit);
+				} else if (strcmp(name, "GV") == 0) {
+					sprintf(string, "GPU Video Engine: %s%s", values, unit);
+				} else if (strcmp(name, "RL") == 0) {
+					sprintf(string, "Memory Load: %s%s", values, unit);
+				} else if (strcmp(name, "RU") == 0) {
+					sprintf(string, "Used Memory: %s%s", values, unit);
+				} else if (strcmp(name, "RA") == 0) {
+					sprintf(string, "Available Memory: %s%s", values, unit);
+				} else if (strcmp(name, "HL") == 0) {
+					sprintf(string, "Used HDD Space: %s%s", values, unit);
+				} else if (strcmp(name, "HT") == 0) {
+					sprintf(string, "HDD Temperature: %s%s", values, unit);
+				}
+
+				for (i = 0; i < 16; i++) {
+					if (i == 15) {
+						top[i] = '\0';
+					}
+
+					top[i] = string[i];
+					bottom[i] = string[count];
+					count++;
+				}
+
+				LCD_MoveToPosition(0x00);
+				LCD_Print(top);
+				LCD_MoveToPosition(0x40);
+				LCD_Print(bottom);
+				count = 16;
+				x = 0;
 				j = 0;
+
+				for (i = 0; i < 10; i++) {
+					if (i < 2) {
+						letter[i] = '\0';
+					}
+					if (i < 3) {
+						name[i] = '\0';
+					}
+					values[i] = '\0';
+				}
 			}
 		}
 	}
@@ -182,12 +201,6 @@ void init() {
 	return;
 }
 
-/*
- * Call this to indicate a failure.  Blinks the STM32F4 discovery LEDs
- * in sequence.  At 168Mhz, the blinking will be very fast - about 5 Hz.
- * Keep that in mind when debugging, knowing the clock speed might help
- * with debugging.
- */
 void ColorfulRingOfDeath(void) {
 	uint16_t ring = 1;
 	while (1) {
@@ -203,10 +216,6 @@ void ColorfulRingOfDeath(void) {
 		GPIOD->BSRRL = (ring << 12);
 	}
 }
-
-/*
- * Interrupt Handlers
- */
 
 void OTG_FS_IRQHandler(void) {
 	USBD_OTG_ISR_Handler(&USB_OTG_dev);
