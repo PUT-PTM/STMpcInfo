@@ -61,9 +61,11 @@ int main(void) {
 			NULL, NULL, GPIO_Pin_7, GPIO_Pin_8, GPIO_Pin_9, GPIO_Pin_10);
 	LCD_Initalize(BUS_WIDTH_4, DISPLAY_LINES_2, FONT_5x10);
 	LCD_Home();
+	LCD_CursorOn(0);
+	LCD_CursorBlink(0);
 	while (1) {
 		if (VCP_get_char(&theByte)) {
-			if (theByte != '\n') {
+			if (theByte != '\n' && theByte!='x') {
 				if (j < 2) {
 					name[j] = theByte;
 					j++;
