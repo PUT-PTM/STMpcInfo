@@ -10,21 +10,19 @@ namespace PTM_PCINFO
     {
         public Form1()
         {
+            //wyświetlenie dostępnych portów i inicjalizacja programu
             InitializeComponent();
-            SystemInfo info = new SystemInfo();
-            info.timer = new System.Timers.Timer();
-            info.timer.Interval = 5000;
-            info.openPort();
-            info.getInfo();
-            Console.WriteLine("Rozpoczęto wysyłanie");
-            info.timer.Elapsed += new ElapsedEventHandler(info.sendInfo);
-            info.timer.Start();
+            comboBox1.Items.Add("Available ports:");
+            foreach (string s in SerialPort.GetPortNames())
+            {
+                comboBox1.Items.Add(s);
+            }
         }
 
         public class SystemInfo
         {
-            public System.Timers.Timer timer;
-            public static SerialPort _serialPort = new SerialPort("COM3",
+            public static System.Timers.Timer timer;
+            public static SerialPort _serialPort = new SerialPort(textBox1.Text,
                 9600, Parity.None, 8, StopBits.One);
             static bool cpuTemp, cpuLoad, cpuClock, busLock, fan, gpuFan, gpuMemory, gpuShader, gpuCore, gpuTemp, gcuCore2, gpuContr, gpuVEn, gpuMem, memLoad, memUsed, memAv, hddLoad, hddTemp = false;
             public static int p = 1;
@@ -43,19 +41,14 @@ namespace PTM_PCINFO
             public static bool _gpu = false;
             public static bool _hdd = false;
             public static bool _ram = false;
-            public void openPort()
+            public void openPort()          // otworzenie portu
             {
-                Console.WriteLine("Dostępne porty:");
-                foreach (string s in SerialPort.GetPortNames())
-                {
-                    Console.WriteLine("   {0}", s);
-                }
                 _serialPort.ReadTimeout = 500;
                 _serialPort.WriteTimeout = 500;
                 _serialPort.Open();
             }
 
-            public void getInfo()
+            public void getInfo()           // pobranie informacji o sprzętach
             {
                 Computer computer = new Computer()
                 {
@@ -72,7 +65,7 @@ namespace PTM_PCINFO
 
                 foreach (var hardware in computer.Hardware)
                 {
-                    if (hardware.HardwareType == HardwareType.CPU)
+                    if (hardware.HardwareType == HardwareType.CPU) //zebranie informacji o dostępnych miernikach związanych z CPU
                     {
                         hardware.Update();
                         foreach (var sensor in hardware.Sensors)
@@ -113,7 +106,7 @@ namespace PTM_PCINFO
                         }
                     }
 
-                    if ((hardware.HardwareType == HardwareType.GpuNvidia || hardware.HardwareType == HardwareType.GpuAti))
+                    if ((hardware.HardwareType == HardwareType.GpuNvidia || hardware.HardwareType == HardwareType.GpuAti)) //zebranie informacji o dostępnych miernikach związanych z GPU
                     {
                         hardware.Update();
                         foreach (var sensor in hardware.Sensors)
@@ -175,7 +168,7 @@ namespace PTM_PCINFO
                     }
 
 
-                    if (hardware.HardwareType == HardwareType.RAM)
+                    if (hardware.HardwareType == HardwareType.RAM) //zebranie informacji o dostępnych miernikach związanych z RAM
                     {
                         hardware.Update();
                         foreach (var sensor in hardware.Sensors)
@@ -200,7 +193,7 @@ namespace PTM_PCINFO
                         }
                     }
 
-                    if (hardware.HardwareType == HardwareType.HDD)
+                    if (hardware.HardwareType == HardwareType.HDD) //zebranie informacji o dostępnych miernikach związanych z HDD
                     {
                         hardware.Update();
                         foreach (var sensor in hardware.Sensors)
@@ -220,10 +213,10 @@ namespace PTM_PCINFO
                         }
                     }
                 }
-                Console.WriteLine("Zakończono wykrywanie sprzętów");
+                comboBox1.Items.Add("Peripherals Detected");
             }
 
-            public void sendInfo(object sender, EventArgs e)
+            public void sendInfo(object sender, EventArgs e) // wysyłanie informacji o wybranych sprzętach przez port szeregowy
             {
                 Computer computer = new Computer()
                 {
@@ -239,7 +232,7 @@ namespace PTM_PCINFO
 
                 foreach (var hardware in computer.Hardware)
                 {
-                    if (hardware.HardwareType == HardwareType.CPU && _cpu == true)
+                    if (hardware.HardwareType == HardwareType.CPU && _cpu == true) //wysyłanie informacji o CPU
                     {
                         hardware.Update();
                         foreach (var sensor in hardware.Sensors)
@@ -247,22 +240,22 @@ namespace PTM_PCINFO
                             if (sensor.SensorType == SensorType.Temperature && cpuTemp && p <= numberOfCores && (((p == 1) && k == 0) || ((p == 2) && k == 1) || ((p == 3) && k == 2) || ((p == 4) && k == 3) || ((p == 5) && k == 4) || ((p == 6) && k == 5) || ((p == 7) && k == 6) || ((p == 8) && k == 7)))
                             {
                                 k++;
-                                _serialPort.WriteLine("C" + k + "C" + Convert.ToString((int)(float)sensor.Value.GetValueOrDefault()));
+                                _serialPort.WriteLine("CC" + "C" + k + Convert.ToString((int)(float)sensor.Value.GetValueOrDefault()));
                             }
 
                             if (sensor.SensorType == SensorType.Load && cpuLoad && p <= (numberOfCores * 2) && (((p == numberOfCores + 1) && x == 0) || ((p == numberOfCores + 2) && x == 1) || ((p == numberOfCores + 3) && x == 2) || ((p == numberOfCores + 4) && x == 3) || ((p == numberOfCores + 5) && x == 4) || ((p == numberOfCores + 6) && x == 5) || ((p == numberOfCores + 7) && x == 6) || ((p == numberOfCores + 8) && x == 7)))
                             {
                                 x++;
-                                _serialPort.WriteLine("C" + x + "%" + Convert.ToString((int)(float)sensor.Value.GetValueOrDefault()));
+                                _serialPort.WriteLine("CC" + "%" + x + Convert.ToString((int)(float)sensor.Value.GetValueOrDefault()));
                             }
 
-                            if (sensor.SensorType == SensorType.Clock && cpuClock && p <= (numberOfCores * 3) && sensor.Name != "Bus Speed" && (((p == ((cpuCounter-2) / 3 * 2) + 1) && l == 0) || ((p == ((cpuCounter - 2) / 3 * 2) + 2) && l == 1) || ((p == ((cpuCounter - 2) / 3 * 2) + 3) && l == 2) || ((p == ((cpuCounter - 2) / 3 * 2) + 4) && l == 3) || ((p == ((cpuCounter - 2) / 3 * 2) + 5) && l == 4) || ((p == ((cpuCounter - 2) / 3 * 2) + 6) && l == 5) || ((p == ((cpuCounter - 2) / 3 * 2) + 7) && l == 6) || ((p == ((cpuCounter - 2) / 3 * 2) + 8) && l == 7)))
+                            if (sensor.SensorType == SensorType.Clock && cpuClock && p <= (numberOfCores * 3) && sensor.Name != "Bus Speed" && (((p == ((cpuCounter - 2) / 3 * 2) + 1) && l == 0) || ((p == ((cpuCounter - 2) / 3 * 2) + 2) && l == 1) || ((p == ((cpuCounter - 2) / 3 * 2) + 3) && l == 2) || ((p == ((cpuCounter - 2) / 3 * 2) + 4) && l == 3) || ((p == ((cpuCounter - 2) / 3 * 2) + 5) && l == 4) || ((p == ((cpuCounter - 2) / 3 * 2) + 6) && l == 5) || ((p == ((cpuCounter - 2) / 3 * 2) + 7) && l == 6) || ((p == ((cpuCounter - 2) / 3 * 2) + 8) && l == 7)))
                             {
                                 l++;
-                                _serialPort.WriteLine("C" + l + "M" + Convert.ToString((int)(float)sensor.Value.GetValueOrDefault()));
+                                _serialPort.WriteLine("CC" + "M" + l + Convert.ToString((int)(float)sensor.Value.GetValueOrDefault()));
                             }
 
-                            if (sensor.SensorType == SensorType.Clock && busLock && sensor.Name.Contains("Bus Speed") && p == (cpuCounter-1))
+                            if (sensor.SensorType == SensorType.Clock && busLock && sensor.Name.Contains("Bus Speed") && p == (cpuCounter - 1))
                             {
                                 _serialPort.WriteLine("BS" + "M" + Convert.ToString((int)(float)sensor.Value.GetValueOrDefault()));
 
@@ -287,7 +280,7 @@ namespace PTM_PCINFO
                     }
                     if (fan != true && p == (cpuCounter)) p++;
 
-                    if ((hardware.HardwareType == HardwareType.GpuNvidia || hardware.HardwareType == HardwareType.GpuAti) && _gpu == true)
+                    if ((hardware.HardwareType == HardwareType.GpuNvidia || hardware.HardwareType == HardwareType.GpuAti) && _gpu == true) //wysyłanie informacji o GPU
                     {
                         hardware.Update();
                         foreach (var sensor in hardware.Sensors)
@@ -394,7 +387,7 @@ namespace PTM_PCINFO
                     }
 
 
-                    if (hardware.HardwareType == HardwareType.RAM && _ram == true)
+                    if (hardware.HardwareType == HardwareType.RAM && _ram == true) //wysyłanie informacji o RAM
                     {
                         hardware.Update();
                         foreach (var sensor in hardware.Sensors)
@@ -432,7 +425,7 @@ namespace PTM_PCINFO
                         }
                     }
 
-                    if (hardware.HardwareType == HardwareType.HDD && _hdd == true)
+                    if (hardware.HardwareType == HardwareType.HDD && _hdd == true) //wysyłanie informacji o HDD
                     {
                         hardware.Update();
                         foreach (var sensor in hardware.Sensors)
@@ -456,12 +449,12 @@ namespace PTM_PCINFO
                             if (hddTemp != true && p == (2 + cpuCounter + gpuCounter + ramCounter))
                             {
                                 p++;
-                            }            
+                            }
                         }
                     }
                 }
 
-                if (p == (1 + gpuCounter + cpuCounter + ramCounter + hddCounter))
+                if (p == (1 + gpuCounter + cpuCounter + ramCounter + hddCounter)) // resetowanie liczników do początkowych wartości lub zwiększenie wartości licznika p
                 {
                     k = x = l = 0;
                     p = 1;
@@ -471,14 +464,14 @@ namespace PTM_PCINFO
             }
         }
 
-            private void Form1_Load(object sender, EventArgs e)
-            {
+        private void Form1_Load(object sender, EventArgs e)
+        {
 
-            }
+        }
 
 
-            private void checkBox4_CheckedChanged_1(object sender, EventArgs e)
-            {
+        private void checkBox4_CheckedChanged_1(object sender, EventArgs e) // funkcja dotycząca pola checkBox odpowiadającego za wyświetlanie informacji o HDD
+        {
             if (checkBox4.Checked)
             {
                 SystemInfo._hdd = true;
@@ -491,8 +484,8 @@ namespace PTM_PCINFO
             }
         }
 
-            private void checkBox3_CheckedChanged(object sender, EventArgs e)
-            {
+        private void checkBox3_CheckedChanged(object sender, EventArgs e) // funkcja dotycząca pola checkBox odpowiadającego za wyświetlanie informacji o RAM
+        {
             if (checkBox3.Checked)
             {
                 SystemInfo._ram = true;
@@ -505,8 +498,8 @@ namespace PTM_PCINFO
             }
         }
 
-            private void checkBox2_CheckedChanged(object sender, EventArgs e)
-            {
+        private void checkBox2_CheckedChanged(object sender, EventArgs e) // funkcja dotycząca pola checkBox odpowiadającego za wyświetlanie informacji o GPU
+        {
             if (checkBox2.Checked)
             {
                 SystemInfo._gpu = true;
@@ -519,11 +512,11 @@ namespace PTM_PCINFO
             }
         }
 
-            private void checkBox1_CheckedChanged(object sender, EventArgs e)
-            {
+        private void checkBox1_CheckedChanged(object sender, EventArgs e) // funkcja dotycząca pola checkBox odpowiadającego za wyświetlanie informacji o CPU
+        {
             if (checkBox1.Checked)
             {
-                SystemInfo.cpuCounter = (SystemInfo.numberOfCores * 3+2);
+                SystemInfo.cpuCounter = (SystemInfo.numberOfCores * 3 + 2);
                 SystemInfo._cpu = true;
             }
             else
@@ -531,21 +524,57 @@ namespace PTM_PCINFO
                 SystemInfo._cpu = false;
                 SystemInfo.cpuCounter = 0;
             }
-            }
+        }
 
-            private void Form1_FormClosing(object sender, FormClosingEventArgs e)
-            {
-
-                SystemInfo._serialPort.WriteLine("x");
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e) // funkcja dotycząca zachowania aplikacji w razie jej zamknięcia
+        {
             Application.Exit();
-            }
+        }
 
-        private void checkBox1_CheckStateChanged(object sender, EventArgs e)
+        private void checkBox1_CheckStateChanged(object sender, EventArgs e) // funkcja dotycząca zachowania programu w razie zmiany stanu jednego z pól checkBox
         {
             SystemInfo.p = 1;
+            SystemInfo.x = SystemInfo.k = SystemInfo.l = 0;
             if (!checkBox1.Checked && !checkBox2.Checked && !checkBox3.Checked && !checkBox4.Checked)
             {
                 SystemInfo._serialPort.WriteLine("x");
+            }
+        }
+
+        private void button1_Click(object sender, EventArgs e) // funkcja związana z otwieraniem portu szeregowego za pomocą przycisku button1
+        {
+            if (textBox1.Text != "")
+            {
+                SystemInfo info = new SystemInfo();
+                SystemInfo.timer = new System.Timers.Timer();
+                SystemInfo.timer.Interval = 5000;
+                info.openPort();
+                info.getInfo();
+                comboBox1.Items.Add("Sending");
+                button2.Enabled = true;
+                button1.Enabled = false;
+                checkBox1.Enabled = true;
+                checkBox2.Enabled = true;
+                checkBox3.Enabled = true;
+                checkBox4.Enabled = true;
+                SystemInfo.timer.Elapsed += new ElapsedEventHandler(info.sendInfo);
+                SystemInfo.timer.Start();
+            }
+        }
+        private void button2_Click(object sender, EventArgs e) // funkcja związana z zamykaniem portu szeregowego za pomocą przycisku button2
+        {
+            button2.Enabled = false;
+            button1.Enabled = true;
+            checkBox1.Enabled = false;
+            checkBox2.Enabled = false;
+            checkBox3.Enabled = false;
+            checkBox4.Enabled = false;
+            SystemInfo.timer.Stop();
+            SystemInfo._serialPort.Close();
+            comboBox1.Items.Add("Available Ports:");
+            foreach (string s in SerialPort.GetPortNames())
+            {
+                comboBox1.Items.Add(s);
             }
         }
     }
