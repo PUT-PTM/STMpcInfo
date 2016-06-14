@@ -45,9 +45,14 @@ Our project consists of two applications. C# application written in Visual Studi
 7. Check  which  peripherals you would like to display.
 8. You can change them while application is running.
 
-##Attributions – We used following code to set up Virtual COM Port
-https://github.com/xenovacivus/STM32DiscoveryVCP
+##Attributions 
 
+We used following code to set up Virtual COM Port: 
+- https://github.com/xenovacivus/STM32DiscoveryVCP
+
+We used following libraries for our display: 
+- https://github.com/ivannikov/HD44780/blob/master/HD44780.c
+- https://github.com/ivannikov/HD44780/blob/master/HD44780.h
 
 ##License
 
