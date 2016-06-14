@@ -1,6 +1,6 @@
 #PcInfo
 ##Overview
-Our project displays information about computer’s peripherals on HD47780 display.
+Our project displays information about computer peripherals on HD47780 display.
 ##Description
 Our project consists of two applications. C# application written in Visual Studio reads the state of peripherals and sends them to Virtual COM Port, each value is sent in 5 seconds intervals. The other one written in CooCox CoIDE displays name of peripheral, current value and unit of value.
 ##Tools 
@@ -40,7 +40,7 @@ Our project consists of two applications. C# application written in Visual Studi
 2. Download project from release section.
 3. Run CooCox project located in Display folder and download program to your STM.
 4. Run PTM_PCINFO.exe located in PTM_PCINFO folder.
-5. Check available COM Ports at the bottom of the graphical interface and provide name of COM Port standing for Virtual COM Port in following format: “COMX”, when X stands for port’s number.
+5. Check available COM Ports at the bottom of the graphical interface and provide name of COM Port standing for Virtual COM Port in following format: “COMX”, when X stands for port number.
 6. Click "OPEN PORT".
 7. Check  which  peripherals you would like to display.
 8. You can change them while application is running.
