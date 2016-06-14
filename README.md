@@ -55,7 +55,7 @@ We used following libraries for our display:
 - https://github.com/ivannikov/HD44780/blob/master/HD44780.h
 
 ##License
-
+https://github.com/PUT-PTM/STMpcInfo/blob/master/LICENSE.txt
 ##Credits 
 Authors: Łukasz Knop, Maciej Zwiewka
 
