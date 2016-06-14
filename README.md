@@ -44,6 +44,7 @@ Our project consists of two applications. C# application written in Visual Studi
 6. Click "OPEN PORT".
 7. Check  which  peripherals you would like to display.
 8. You can change them while application is running.
+
 ##Attributions – We used following code to set up Virtual COM Port
 https://github.com/xenovacivus/STM32DiscoveryVCP
 
